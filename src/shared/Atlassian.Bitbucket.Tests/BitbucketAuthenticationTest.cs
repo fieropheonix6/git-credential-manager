@@ -51,6 +51,7 @@ namespace Atlassian.Bitbucket.Tests
         {
             var context = new TestCommandContext();
             context.SessionManager.IsDesktopSession = true; // Allow OAuth mode
+            context.Settings.IsGuiPromptsEnabled = false; // Force text prompts
             context.Terminal.Prompts["option (enter for default)"] = "1";
             Uri targetUri = null;
 
@@ -71,6 +72,7 @@ namespace Atlassian.Bitbucket.Tests
 
             var context = new TestCommandContext();
             context.SessionManager.IsDesktopSession = true; // Allow OAuth mode
+            context.Settings.IsGuiPromptsEnabled = false; // Force text prompts
             context.Terminal.Prompts["option (enter for default)"] = "2";
             context.Terminal.Prompts["Username"] = username;
             context.Terminal.SecretPrompts["Password"] = password;
@@ -113,7 +115,8 @@ namespace Atlassian.Bitbucket.Tests
         {
             var targetUri = new Uri("https://bitbucket.org");
 
-            var helperPath = "/usr/bin/test-helper";
+            var command = "/usr/bin/test-helper";
+            var args = "";
             var expectedUserName = "jsquire";
             var expectedPassword = "password";
             var resultDict = new Dictionary<string, string>
@@ -128,7 +131,7 @@ namespace Atlassian.Bitbucket.Tests
             context.SessionManager.IsDesktopSession = true; // Enable OAuth and UI helper selection
 
             var authMock = new Mock<BitbucketAuthentication>(context) { CallBase = true };
-            authMock.Setup(x => x.TryFindHelperExecutablePath(out helperPath))
+            authMock.Setup(x => x.TryFindHelperCommand(out command, out args))
                 .Returns(true);
             authMock.Setup(x => x.InvokeHelperAsync(It.IsAny<string>(), It.IsAny<string>(), null, CancellationToken.None))
                 .ReturnsAsync(resultDict);
@@ -140,7 +143,7 @@ namespace Atlassian.Bitbucket.Tests
             Assert.Equal(result.Credential.Account, expectedUserName);
             Assert.Equal(result.Credential.Password, expectedPassword);
 
-            authMock.Verify(x => x.InvokeHelperAsync(helperPath, expectedArgs, null, CancellationToken.None),
+            authMock.Verify(x => x.InvokeHelperAsync(command, expectedArgs, null, CancellationToken.None),
                 Times.Once);
         }
 
@@ -149,7 +152,8 @@ namespace Atlassian.Bitbucket.Tests
         {
             var targetUri = new Uri("https://bitbucket.org");
 
-            var helperPath = "/usr/bin/test-helper";
+            var command = "/usr/bin/test-helper";
+            var args = "";
             var expectedUserName = "jsquire";
             var expectedPassword = "password";
             var resultDict = new Dictionary<string, string>
@@ -164,7 +168,7 @@ namespace Atlassian.Bitbucket.Tests
             context.SessionManager.IsDesktopSession = true; // Enable UI helper selection
 
             var authMock = new Mock<BitbucketAuthentication>(context) { CallBase = true };
-            authMock.Setup(x => x.TryFindHelperExecutablePath(out helperPath))
+            authMock.Setup(x => x.TryFindHelperCommand(out command, out args))
                 .Returns(true);
             authMock.Setup(x => x.InvokeHelperAsync(It.IsAny<string>(), It.IsAny<string>(), null, CancellationToken.None))
                 .ReturnsAsync(resultDict);
@@ -176,7 +180,7 @@ namespace Atlassian.Bitbucket.Tests
             Assert.Equal(result.Credential.Account, expectedUserName);
             Assert.Equal(result.Credential.Password, expectedPassword);
 
-            authMock.Verify(x => x.InvokeHelperAsync(helperPath, expectedArgs, null, CancellationToken.None),
+            authMock.Verify(x => x.InvokeHelperAsync(command, expectedArgs, null, CancellationToken.None),
                 Times.Once);
         }
 
@@ -185,7 +189,8 @@ namespace Atlassian.Bitbucket.Tests
         {
             var targetUri = new Uri("https://example.com/bitbucket");
 
-            var helperPath = "/usr/bin/test-helper";
+            var command = "/usr/bin/test-helper";
+            var args = "";
             var expectedUserName = "jsquire";
             var expectedPassword = "password";
             var resultDict = new Dictionary<string, string>
@@ -200,7 +205,7 @@ namespace Atlassian.Bitbucket.Tests
             context.SessionManager.IsDesktopSession = true; // Enable OAuth and UI helper selection
 
             var authMock = new Mock<BitbucketAuthentication>(context) { CallBase = true };
-            authMock.Setup(x => x.TryFindHelperExecutablePath(out helperPath))
+            authMock.Setup(x => x.TryFindHelperCommand(out command, out args))
                 .Returns(true);
             authMock.Setup(x => x.InvokeHelperAsync(It.IsAny<string>(), It.IsAny<string>(), null, CancellationToken.None))
                 .ReturnsAsync(resultDict);
@@ -212,7 +217,7 @@ namespace Atlassian.Bitbucket.Tests
             Assert.Equal(result.Credential.Account, expectedUserName);
             Assert.Equal(result.Credential.Password, expectedPassword);
 
-            authMock.Verify(x => x.InvokeHelperAsync(helperPath, expectedArgs, null, CancellationToken.None),
+            authMock.Verify(x => x.InvokeHelperAsync(command, expectedArgs, null, CancellationToken.None),
                 Times.Once);
         }
     }
