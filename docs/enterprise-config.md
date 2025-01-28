@@ -3,8 +3,8 @@
 Git Credential Manager (GCM) can be configured using multiple
 different mechanisms. In order of preference, those mechanisms are:
 
-1. [Environment variables](environment.md)
-1. [Standard Git configuration files](configuration.md)
+1. [Environment variables][environment]
+1. Standard [Git configuration][config] files
    1. Repository/local configuration (`.git/config`)
    1. User/global configuration (`$HOME/.gitconfig` or `%HOME%\.gitconfig`)
    1. Installation/system configuration (`etc/gitconfig`)
@@ -50,11 +50,45 @@ By using the Windows Registry, system administrators can use Group Policy to
 easily set defaults for GCM's settings.
 
 The names and possible values of all settings under this key are the same as
-those of the [Git configuration](configuration.md) settings.
+those of the [Git configuration][config] settings.
 
 The type of each registry key can be either `REG_SZ` (string) or `REG_DWORD`
 (integer).
 
-## macOS/Linux
+## macOS
+
+Default settings values come from macOS's preferences system. Configuration
+profiles can be deployed to devices using a compatible Mobile Device Management
+(MDM) solution.
+
+Configuration for Git Credential Manager must take the form of a dictionary, set
+for the domain `git-credential-manager` under the key `configuration`. For
+example:
+
+```shell
+defaults write git-credential-manager configuration -dict-add <key> <value>
+```
+
+..where `<key>` is the name of the settings from the [Git configuration][config]
+reference, and `<value>` is the desired value.
+
+All values in the `configuration` dictionary must be strings. For boolean values
+use `true` or `false`, and for integer values use the number in string form.
+
+To read the current configuration:
+
+```console
+$ defaults read git-credential-manager configuration
+{
+    <key1> = <value1>;
+    ...
+    <keyN> = <valueN>;
+}
+```
+
+## Linux
 
 Default configuration setting stores has not been implemented.
+
+[environment]: environment.md
+[config]: configuration.md

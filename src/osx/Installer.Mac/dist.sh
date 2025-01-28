@@ -35,6 +35,10 @@ case "$i" in
     RUNTIME="${i#*=}"
     shift
     ;;
+    --identity=*)
+    IDENTITY="${i#*=}"
+    shift
+    ;;
     *)
           # unknown option
     ;;
@@ -70,7 +74,7 @@ fi
 
 echo "Building for runtime '$RUNTIME'"
 
-if [ "$RUNTIME" == "osx-x64"]; then
+if [ "$RUNTIME" == "osx-x64" ]; then
     DISTPATH="$INSTALLER_SRC/distribution.x64.xml"
 else
     DISTPATH="$INSTALLER_SRC/distribution.arm64.xml"
@@ -93,6 +97,7 @@ echo "Building product package..."
     --distribution "$DISTPATH" \
     --identifier "$IDENTIFIER" \
     --version "$VERSION" \
+    ${IDENTITY:+"--sign"} ${IDENTITY:+"$IDENTITY"} \
     "$DISTOUT" || exit 1
 
 echo "Product build complete."

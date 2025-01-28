@@ -8,9 +8,6 @@ $THISDIR = $pwd.path
 $ROOT = (Get-Item $THISDIR).parent.parent.parent.FullName
 $SRC = "$ROOT/src"
 $GCM_SRC = "$SRC/shared/Git-Credential-Manager"
-$BITBUCKET_UI_SRC = "$SRC/windows/Atlassian.Bitbucket.UI.Windows"
-$GITHUB_UI_SRC = "$SRC/windows/GitHub.UI.Windows"
-$GITLAB_UI_SRC = "$SRC/windows/GitLab.UI.Windows"
 
 # Perform pre-execution checks
 $PAYLOAD = "$OUTPUT"
@@ -40,25 +37,38 @@ mkdir -p "$PAYLOAD","$SYMBOLS"
 # Publish core application executables
 Write-Output "Publishing core application..."
 dotnet publish "$GCM_SRC" `
-    --framework net472 `
+	--framework net472 `
 	--configuration "$CONFIGURATION" `
 	--runtime win-x86 `
 	--output "$PAYLOAD"
 
-Write-Output "Publishing Bitbucket UI helper..."
-dotnet publish "$BITBUCKET_UI_SRC" `
-	--configuration "$CONFIGURATION" `
-	--output "$PAYLOAD" 
+# Delete libraries that are not needed for Windows but find their way
+# into the publish output.
+Remove-Item -Path "$PAYLOAD/*.dylib" -Force
 
-Write-Output "Publishing GitHub UI helper..."
-dotnet publish "$GITHUB_UI_SRC" `
-	--configuration "$CONFIGURATION" `
-	--output "$PAYLOAD" 
+# Delete extraneous files that get included for other architectures
+# We only care about x86 as the core GCM executable is only targeting x86
+Remove-Item -Path "$PAYLOAD/arm/" -Recurse -Force
+Remove-Item -Path "$PAYLOAD/arm64/" -Recurse -Force
+Remove-Item -Path "$PAYLOAD/x64/" -Recurse -Force
+Remove-Item -Path "$PAYLOAD/musl-x64/" -Recurse -Force
+Remove-Item -Path "$PAYLOAD/runtimes/win-arm64/" -Recurse -Force
+Remove-Item -Path "$PAYLOAD/runtimes/win-x64/" -Recurse -Force
 
-Write-Output "Publishing GitLab UI helper..."
-dotnet publish "$GITLAB_UI_SRC" `
-	--configuration "$CONFIGURATION" `
-	--output "$PAYLOAD" 
+# The Avalonia and MSAL binaries in these directories are already included in
+# the $PAYLOAD directory directly, so we can delete these extra copies.
+Remove-Item -Path "$PAYLOAD/x86/libSkiaSharp.dll" -Recurse -Force
+Remove-Item -Path "$PAYLOAD/x86/libHarfBuzzSharp.dll" -Recurse -Force
+Remove-Item -Path "$PAYLOAD/runtimes/win-x86/native/msalruntime_x86.dll" -Recurse -Force
+
+# Delete localized resource assemblies - we don't localize the core GCM assembly anyway
+Get-ChildItem "$PAYLOAD" -Recurse -Include "*.resources.dll" | Remove-Item -Force
+
+# Delete any empty directories
+Get-ChildItem "$PAYLOAD" -Recurse -Directory `
+	| Sort-Object -Property FullName -Descending `
+	| Where-Object { ! (Get-ChildItem $_.FullName -File -Recurse).Count } `
+	| Remove-Item -Force
 
 # Collect symbols
 Write-Output "Collecting managed symbols..."
